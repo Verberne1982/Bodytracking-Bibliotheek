@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Posetracking mediapipe </title>
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js",
+          "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/"
+        }
+      }
+    </script>
+    <script type="module" src="js/posetracking.js" defer></script>
+    <link rel="stylesheet" href="style.css">
+  </head>
+  <body>
+
+    <div id="container">
+      <canvas id="ThreeJS_output" width="400px" height="300px"></canvas>
+      <canvas id="output_canvas" width="400px" height="300px"></canvas>
+      <video id="webcam" playsinline autoplay></video>
+      <button id="webcamButton"> Webcam inschakelen </button>
+    </div>
+    
+  </body>
+</html>
+
