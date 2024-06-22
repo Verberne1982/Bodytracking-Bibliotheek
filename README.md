@@ -1,145 +1,132 @@
-Posetracking Mediapipe
-======================
+# Motion Tracking Library
+Deze bibliotheek maakt gebruik van MediaPipe's PoseLandmarker voor real-time pose tracking met behulp van een webcam. Hieronder vind je instructies om aan de slag te gaan met de bibliotheek en enkele voorbeelden van mogelijke toepassingen.
 
-This project integrates the Mediapipe Pose Landmarker with a 3D cube visualization using Three.js. The application tracks human poses from webcam input and uses this data to manipulate a 3D cube in real-time.
+## Installatie
+Voeg de bibliotheek toe aan je project met behulp van een scripttag:
 
-Table of Contents
------------------
+```html
+<script type="module">
+  import {
+    PoseLandmarker,
+    FilesetResolver,
+    DrawingUtils
+  } from "https://cdn.skypack.dev/@mediapipe/tasks-vision@0.10.0";
+</script>
+```
 
-*   [Setup](#setup)
-    
-*   [Usage](#usage)
-    
-*   [Project Structure](#project-structure)
-    
-*   [Functionality](#functionality)
-    
-*   [Code Explanation](#code-explanation)
-    
-*   [Troubleshooting](#troubleshooting)
-    
+## Gebruik
+Initialisatie van PoseLandmarker:
 
-Setup
------
+Voordat je pose tracking kunt uitvoeren, moet je de PoseLandmarker initialiseren met de gewenste opties. Zorg ervoor dat je de FilesetResolver gebruikt om visuele taken te laden:
 
-### Prerequisites
+```javascript
+const vision = await FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0/wasm");
+const poseLandmarker = await PoseLandmarker.createFromOptions(vision, {
+  baseOptions: {
+    modelAssetPath: `./models/pose_landmarker_full.task`,
+    delegate: "GPU",
+  },
+  runningMode: "VIDEO",
+  numPoses: 2,
+});
+```
 
-Before you start, ensure you have the following installed:
+## Webcam Activeren:
 
-*   A modern web browser (preferably Google Chrome)
-    
-*   A webcam
-    
-*   A local server to serve the files (e.g., Live Server in VSCode)
-    
+Voeg een HTML-button toe om de webcam te activeren en pose tracking te starten:
 
-### Installation
+```html
+<button id="webcamButton">Start Webcam</button>
+<video id="webcam" autoplay playsinline></video>
+<canvas id="output_canvas"></canvas>
+<canvas id="ThreeJS_output"></canvas>
 
-1.  Clone the repository or download the project files.
-    
-2.  Open the project directory in your code editor.
-    
+<script>
+const enableWebcamButton = document.getElementById("webcamButton");
+enableWebcamButton.addEventListener("click", enableCam);
+</script>
 
-### Running the Project
+```
+## Pose Tracking Starten:
 
-1.  Ensure you are running a local server in your project directory.
-    
-2.  Open index.html in your browser via the local server.
-    
-3.  Click the "Webcam inschakelen" button to enable the webcam and start pose tracking.
-    
+Zodra de webcam is gestart, kun je pose tracking starten en visuele feedback weergeven:
 
-Usage
------
+```javascript
+async function enableCam() {
+  const videoElement = document.getElementById('webcam');
+  const canvasElement = document.getElementById('output_canvas');
 
-1.  **Enable Webcam**: Click the "Webcam inschakelen" button to start the webcam feed.
-    
-2.  **Interact with the Cube**: Use various gestures to interact with the 3D cube:
-    
-    *   **Move Cube**: Move your body to the left or right to move the cube along the X-axis.
-        
-    *   **Scale Cube**: Move your hands closer or farther apart to scale the cube.
-        
-    *   **Jump Cube**: Move your hands up and down to move the cube along the Y-axis.
-        
-    *   **Change Color**: Make a specific pose to change the color of the cube.
-        
-    *   **Rotate Cube**: Raise your hand above a certain point to start or stop the cube's rotation.
-        
+  // Activeer de webcam en stel videoElement in
+  const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+  videoElement.srcObject = stream;
 
-Project Structure
------------------
+  // Start pose tracking
+  await predictWebcam(videoElement, canvasElement);
+}
 
-project-directory/  │  ├── js/  │   └── posetracking.js  ├── style.css  ├── index.html  └── models/      └── pose_landmarker_full.task   `
+async function predictWebcam(videoElement, canvasElement) {
+  const ctx = canvasElement.getContext('2d');
+  const results = await poseLandmarker.estimatePoses(videoElement);
 
-*   **js/posetracking.js**: Contains the main JavaScript code for pose tracking and 3D cube manipulation.
-    
-*   **style.css**: Contains the styling for the webpage.
-    
-*   **index.html**: The main HTML file.
-    
-*   **models/pose\_landmarker\_full.task**: The pose landmark model used by Mediapipe.
-    
+  // Verwerk de resultaten en voer acties uit op basis van de pose data
+  results.forEach(pose => {
+    // Voer hier verdere verwerking uit, zoals het aanpassen van 3D objecten
+    // gebaseerd op pose landmarks
+  });
 
-Functionality
--------------
+  requestAnimationFrame(() => predictWebcam(videoElement, canvasElement));
+}
+```
 
-### Pose Tracking
+## Voorbeelden van Functionaliteit
+### Update van Kubuspositie
 
-The application uses Mediapipe to track human poses in real-time from the webcam feed. It then uses the pose landmarks to control the 3D cube's position, scale, color, and rotation.
+Gebruik handlandmarks om de positie van een 3D-object, zoals een kubus, dynamisch bij te werken.
+```javascript
+function updateCubePositionX(landmarks) {
+  // Implementatie om positie langs x-as te updaten op basis van handlandmarks
+}
+```
+### Schaal aanpassen
+Pas de schaal van een 3D-object aan op basis van de afstand tussen specifieke handlandmarks.
 
-### Three.js Integration
+```javascript
+function cubeScaling(landmarks) {
+  // Implementatie om schaal van een kubus aan te passen op basis van handlandmarks
+}
+```
 
-Three.js is used to render a 3D cube, which is manipulated based on the pose tracking data.
+### Hoogte aanpassen
+Pas de hoogte van een kubus aan op basis van handlandmarks.
 
-Code Explanation
-----------------
+```javascript
+function cubeJump(landmarks) {
+  // Implementatie om hoogte van een kubus aan te passen op basis van handlandmarks
+}
+```
 
-### Main Functions
+### Actie detecteren
+Detecteer een specifiek handgebaar, zoals een vuist, en voer een bijbehorende actie uit.
 
-*   **createPoseLandmarker**: Initializes the Mediapipe Pose Landmarker.
-    
-*   **updateCubePositionX**: Updates the cube's X position based on the detected landmarks.
-    
-*   **cubeScaling**: Adjusts the cube's scale based on the distance between specific landmarks.
-    
-*   **cubeJump**: Adjusts the cube's Y position based on the average Y position of specific landmarks.
-    
-*   **detectAction**: Detects specific poses to trigger an action (e.g., change color).
-    
-*   **detectInteraction**: Detects specific interactions to control the cube's rotation.
-    
+```javascript
+function detectAction(landmarks) {
+  // Implementatie om een actie uit te voeren bij detectie van een handgebaar (bijv. vuist)
+}
+```
 
-### Enabling the Webcam
+### Interactie detecteren
+Start of stop de rotatie van een kubus op basis van handlandmarks.
 
-*   **hasGetUserMedia**: Checks if the browser supports webcam access.
-    
-*   **enableCam**: Toggles the webcam on and off, and starts the pose prediction loop.
-    
-*   **initializeThreeJS**: Initializes the Three.js scene, including the camera, renderer, and cube.
-    
+```javascript
+function detectInteraction(landmarks) {
+  // Implementatie om rotatie van een kubus te starten of stoppen op basis van handlandmarks
+}
+```
+  
+## Bijdragen
+Bijdragen aan deze bibliotheek zijn welkom. Zorg ervoor dat je nieuwe functies toevoegt volgens de SOLID principes en OOP richtlijnen voor een gestructureerde en onderhoudbare codebase.
 
-### Pose Prediction
+## Bronnen
+- https://ai.google.dev/edge/mediapipe/solutions/vision/pose_landmarker
+- https://threejs.org/
 
-*   **predictWebcam**: Main loop that performs pose tracking on each video frame and updates the canvas and 3D scene accordingly.
-    
-
-Troubleshooting
----------------
-
-*   **Webcam Access**: Ensure your browser has permission to access the webcam.
-    
-*   **Pose Tracking Not Working**: Make sure the PoseLandmarker model is correctly loaded.
-    
-*   **Three.js Issues**: Check the console for any errors related to Three.js initialization.
-    
-
-Additional Resources
---------------------
-
-*   Mediapipe Documentation
-    
-*   Three.js Documentation
-    
-
-By following this README, you should be able to set up and run the posetracking project successfully. Enjoy interacting with the 3D cube using your body movements!
